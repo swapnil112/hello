@@ -1,0 +1,81 @@
+text--
+#i=list(range(0, 7756))
+#df['title']=i
+
+"""
+import re
+go_tags=df.copy()
+def clean_tag(tag):
+    #tag = re.sub(r"[\'\[\]]","",tag)
+    tag = re.sub(r'\s','',tag)
+    tag = re.sub(r'\"','',tag)
+    tag = re.sub(r"\d+", "", tag)
+    tag = re.sub(r";", "", tag)
+    tag = re.sub(r",", "", tag)
+    tag = re.sub(r"-", "", tag)
+    tag = re.sub(r'\([^)]*\)', '', tag)
+    tag = re.sub('\.(?!(\S[^. ])|\d)', '', tag)
+    return tag
+go_tags['client_agent']=go_tags['client_agent'].apply(lambda x: clean_tag(x))
+
+temp=go_tags['client_agent'].str.split('/')
+go_tags.reset_index(inplace=True)
+go_tags=go_tags.reindex(go_tags.index.repeat(temp.apply(len)))
+go_tags['client_agent_new'] = np.hstack(temp)
+go_tags=go_tags[['title','client_agent_new']]
+go_tags=pd.crosstab(go_tags.title,go_tags.client_agent_new)
+go_tags.head()
+"""
+
+#df=df.merge(go_tags, on='title', how='left')
+#del df['title']
+
+import re
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'@[a-zA-Z0-9_]+', '', text)   
+    text = re.sub(r'https?://[A-Za-z0-9./]+', '', text)   
+    text = re.sub(r'www.[^ ]+', '', text)  
+    text = re.sub(r'[a-zA-Z0-9]*www[a-zA-Z0-9]*com[a-zA-Z0-9]*', '', text)  
+    text = re.sub(r'[^a-zA-Z]', ' ', text)   
+    text = [token for token in text.split() if len(token) > 2]
+    text = ' '.join(text)
+    return text
+
+df['client_agent'] = df['client_agent'].apply(clean_text)
+
+import nltk
+nltk.download('stopwords')
+
+import string
+punctuation=string.punctuation
+df['word_count']=df['client_agent'].apply(lambda x: len(str(x).split(" ")))
+df['char_count'] = df['client_agent'].str.len()
+def avg_word(sentence):
+    words = sentence.split()
+    return (sum(len(word) for word in words)/len(words))
+
+df['avg_word'] = df['client_agent'].apply(lambda x: avg_word(x))
+from nltk.corpus import stopwords
+stop = stopwords.words('english')
+
+df['stopwords'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x in stop]))
+df['numerics'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x.isdigit()]))
+df['upper'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x.isupper()]))
+df['word_density'] = df['char_count'] / (df['word_count']+1)
+df['punctuation_count'] = df['client_agent'].apply(lambda x: len("".join(_ for _ in x if _ in punctuation)))
+
+j=[]
+for i in df['client_agent']:
+  j.append(len(i))
+df['client_agent_length']=j
+
+from textblob import TextBlob
+df['polarity'] = df.apply(lambda x: TextBlob(x['client_agent']).sentiment.polarity, axis=1)
+df['subjectivity'] = df.apply(lambda x: TextBlob(x['client_agent']).sentiment.subjectivity, axis=1)
+
+x=['client_agent','Type_Browser','Browser']
+for i in x:
+  from sklearn.preprocessing import LabelEncoder
+  le = LabelEncoder()
+  df[i] = le.fit_transform(df[i])
