@@ -1,81 +1,49 @@
-text--
-#i=list(range(0, 7756))
-#df['title']=i
+train_df=train.copy()
+test_df=test.copy()
 
-"""
-import re
-go_tags=df.copy()
-def clean_tag(tag):
-    #tag = re.sub(r"[\'\[\]]","",tag)
-    tag = re.sub(r'\s','',tag)
-    tag = re.sub(r'\"','',tag)
-    tag = re.sub(r"\d+", "", tag)
-    tag = re.sub(r";", "", tag)
-    tag = re.sub(r",", "", tag)
-    tag = re.sub(r"-", "", tag)
-    tag = re.sub(r'\([^)]*\)', '', tag)
-    tag = re.sub('\.(?!(\S[^. ])|\d)', '', tag)
-    return tag
-go_tags['client_agent']=go_tags['client_agent'].apply(lambda x: clean_tag(x))
+X = train_df.drop(labels=['time_spent'], axis=1)
+y = train_df['time_spent'].values
 
-temp=go_tags['client_agent'].str.split('/')
-go_tags.reset_index(inplace=True)
-go_tags=go_tags.reindex(go_tags.index.repeat(temp.apply(len)))
-go_tags['client_agent_new'] = np.hstack(temp)
-go_tags=go_tags[['title','client_agent_new']]
-go_tags=pd.crosstab(go_tags.title,go_tags.client_agent_new)
-go_tags.head()
-"""
+from sklearn.model_selection import train_test_split
+X_train, X_cv, y_train, y_cv = train_test_split(X, y, test_size=0.10, random_state=101)
 
-#df=df.merge(go_tags, on='title', how='left')
-#del df['title']
+X_train.shape, y_train.shape, X_cv.shape, y_cv.shape
 
-import re
-def clean_text(text):
-    text = text.lower()
-    text = re.sub(r'@[a-zA-Z0-9_]+', '', text)   
-    text = re.sub(r'https?://[A-Za-z0-9./]+', '', text)   
-    text = re.sub(r'www.[^ ]+', '', text)  
-    text = re.sub(r'[a-zA-Z0-9]*www[a-zA-Z0-9]*com[a-zA-Z0-9]*', '', text)  
-    text = re.sub(r'[^a-zA-Z]', ' ', text)   
-    text = [token for token in text.split() if len(token) > 2]
-    text = ' '.join(text)
-    return text
+from sklearn.metrics import mean_squared_log_error
+from math import sqrt
 
-df['client_agent'] = df['client_agent'].apply(clean_text)
+import lightgbm as lgb
+train_data = lgb.Dataset(X_train, label=y_train)
+test_data = lgb.Dataset(X_cv, label=y_cv)
 
-import nltk
-nltk.download('stopwords')
+param = {'objective': 'regression',
+         'boosting': 'gbdt',  
+         'metric': 'l2_root',
+         'learning_rate': 0.01, 
+         'num_iterations': 1000,
+         'num_leaves': 69,
+         'max_depth': -1,
+         'min_data_in_leaf': 11,
+         'bagging_fraction': 0.90,
+         'bagging_freq': 1,
+         'bagging_seed': 3,
+         'feature_fraction': 0.90,
+         'feature_fraction_seed': 2,
+         'early_stopping_round': 200,
+         'max_bin': 500
+         }
 
-import string
-punctuation=string.punctuation
-df['word_count']=df['client_agent'].apply(lambda x: len(str(x).split(" ")))
-df['char_count'] = df['client_agent'].str.len()
-def avg_word(sentence):
-    words = sentence.split()
-    return (sum(len(word) for word in words)/len(words))
+lgbm = lgb.train(params=param, verbose_eval=100, train_set=train_data, valid_sets=[test_data])
 
-df['avg_word'] = df['client_agent'].apply(lambda x: avg_word(x))
-from nltk.corpus import stopwords
-stop = stopwords.words('english')
+y_pred_lgbm = lgbm.predict(X_cv)
+print('RMSLE:', sqrt(mean_squared_log_error(np.expm1(y_cv), np.expm1(y_pred_lgbm))))
 
-df['stopwords'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x in stop]))
-df['numerics'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x.isdigit()]))
-df['upper'] = df['client_agent'].apply(lambda x: len([x for x in x.split() if x.isupper()]))
-df['word_density'] = df['char_count'] / (df['word_count']+1)
-df['punctuation_count'] = df['client_agent'].apply(lambda x: len("".join(_ for _ in x if _ in punctuation)))
+import seaborn as sns
+feature_imp = pd.DataFrame(sorted(zip(lgbm.feature_importance(), X.columns), reverse=True)[:50], 
+                           columns=['Value','Feature'])
+plt.figure(figsize=(12, 10))
+sns.barplot(x="Value", y="Feature", data=feature_imp.sort_values(by="Value", ascending=False))
+plt.title('LightGBM Features')
+plt.tight_layout()
+plt.show()
 
-j=[]
-for i in df['client_agent']:
-  j.append(len(i))
-df['client_agent_length']=j
-
-from textblob import TextBlob
-df['polarity'] = df.apply(lambda x: TextBlob(x['client_agent']).sentiment.polarity, axis=1)
-df['subjectivity'] = df.apply(lambda x: TextBlob(x['client_agent']).sentiment.subjectivity, axis=1)
-
-x=['client_agent','Type_Browser','Browser']
-for i in x:
-  from sklearn.preprocessing import LabelEncoder
-  le = LabelEncoder()
-  df[i] = le.fit_transform(df[i])
