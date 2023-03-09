@@ -1,49 +1,19 @@
-train_df=train.copy()
-test_df=test.copy()
+import torch
+import transformers
 
-X = train_df.drop(labels=['time_spent'], axis=1)
-y = train_df['time_spent'].values
+class ClinicalBERTEmbedding(torch.nn.Module):
+    def __init__(self):
+        super(ClinicalBERTEmbedding, self).__init__()
+        self.tokenizer = transformers.ClinicalBertTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
+        self.model = transformers.ClinicalBertModel.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
 
-from sklearn.model_selection import train_test_split
-X_train, X_cv, y_train, y_cv = train_test_split(X, y, test_size=0.10, random_state=101)
+    def forward(self, text):
+        input_ids = torch.tensor(self.tokenizer.encode(text, add_special_tokens=True)).unsqueeze(0)
+        outputs = self.model(input_ids)
+        embeddings = outputs.last_hidden_state.mean(dim=1).squeeze()
+        return embeddings
 
-X_train.shape, y_train.shape, X_cv.shape, y_cv.shape
-
-from sklearn.metrics import mean_squared_log_error
-from math import sqrt
-
-import lightgbm as lgb
-train_data = lgb.Dataset(X_train, label=y_train)
-test_data = lgb.Dataset(X_cv, label=y_cv)
-
-param = {'objective': 'regression',
-         'boosting': 'gbdt',  
-         'metric': 'l2_root',
-         'learning_rate': 0.01, 
-         'num_iterations': 1000,
-         'num_leaves': 69,
-         'max_depth': -1,
-         'min_data_in_leaf': 11,
-         'bagging_fraction': 0.90,
-         'bagging_freq': 1,
-         'bagging_seed': 3,
-         'feature_fraction': 0.90,
-         'feature_fraction_seed': 2,
-         'early_stopping_round': 200,
-         'max_bin': 500
-         }
-
-lgbm = lgb.train(params=param, verbose_eval=100, train_set=train_data, valid_sets=[test_data])
-
-y_pred_lgbm = lgbm.predict(X_cv)
-print('RMSLE:', sqrt(mean_squared_log_error(np.expm1(y_cv), np.expm1(y_pred_lgbm))))
-
-import seaborn as sns
-feature_imp = pd.DataFrame(sorted(zip(lgbm.feature_importance(), X.columns), reverse=True)[:50], 
-                           columns=['Value','Feature'])
-plt.figure(figsize=(12, 10))
-sns.barplot(x="Value", y="Feature", data=feature_imp.sort_values(by="Value", ascending=False))
-plt.title('LightGBM Features')
-plt.tight_layout()
-plt.show()
-
+model = ClinicalBERTEmbedding()
+text = "The patient presented with shortness of breath and chest pain."
+embedding = model(text)
+print(embedding)
