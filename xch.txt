@@ -1,38 +1,17 @@
-Truncate the text: You can simply truncate the text to the first 512 tokens and discard the rest. This may result in the loss of some important information towards the end of the text, but it can be a simple and effective solution.
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-Split the text into multiple segments: You can split the text into multiple segments of 512 tokens or less and process each segment separately. This allows you to capture more of the information in the text, but it can be more computationally expensive and may require additional processing to combine the results.
+# Load ClinicalBERT tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
+model = AutoModelForSeq2SeqLM.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
 
-Use a sliding window approach: You can use a sliding window approach to process the text in overlapping segments of 512 tokens. This allows you to capture more of the information in the text while avoiding the need for explicit segmentation or truncation, but it can be more computationally expensive and may require additional processing to combine the results.
+# Define the text to be summarized
+text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel felis mauris. Quisque ut mauris tincidunt, dictum sapien vel, blandit lectus. Sed lacinia aliquet odio, ac ullamcorper ipsum lacinia vel. Fusce eu est suscipit, congue tellus vel, consequat elit. Nullam ut justo vel risus sodales semper nec et libero."
 
-Use a hierarchical approach: You can use a hierarchical approach that first summarizes the text at a higher level (e.g., at the paragraph or section level) and then processes the summarized text using Clinical BERT or another model. This can help reduce the length of the input text while retaining important information, but it can be more complex to implement and may require additional training data.
+# Tokenize the text
+inputs = tokenizer.encode(text, return_tensors="pt")
 
+# Generate summary
+summary_ids = model.generate(inputs, num_beams=4, max_length=50, early_stopping=True)
+summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
-Data availability: The development of Clinical BERT requires large amounts of high-quality clinical text data, which can be difficult to obtain due to privacy concerns and limited access to electronic health records.
-
-Domain specificity: Clinical BERT is specifically designed for clinical NLP tasks and may not perform as well on non-clinical texts or general language tasks.
-
-Bias: Clinical BERT, like any other machine learning model, is subject to bias based on the training data it is exposed to. Careful attention needs to be paid to ensure the model is trained on diverse and representative clinical text data.
-
-Interpretability: Clinical BERT, like other deep learning models, can be difficult to interpret and understand how it arrives at its predictions or classifications. This can be a limitation in some clinical contexts where interpretability is important.
-
-Model size and computational requirements: Clinical BERT is a large model with millions of parameters, which can make it computationally expensive to train and deploy in production environments with limited resources.
-
-Language support: Clinical BERT is currently designed for English language clinical text, and may not work well on clinical texts in other languages.
-
-
-
-
-
-Model size: Clinical BERT is a large model with over 340 million parameters, which can make it computationally expensive to train and deploy.
-
-Model length: Clinical BERT has a maximum sequence length of 512 tokens, which means that it can only process texts up to that length.
-
-Input text preprocessing: Clinical BERT requires input text to be preprocessed to match the format used during training, which includes tokenization, sentence segmentation, and special token additions.
-
-Fine-tuning on specific tasks: Clinical BERT is a pre-trained model and needs to be fine-tuned on specific clinical NLP tasks to achieve high performance. Fine-tuning requires labeled clinical text data and can be time-consuming and resource-intensive.
-
-Hardware requirements: Clinical BERT's large size and computational demands require powerful hardware such as GPUs or TPUs to achieve high performance during training and inference.
-
-Memory limitations: Due to its large size, Clinical BERT may not fit in the memory of smaller computing devices, which can limit its deployment on such devices.
-
-Limited multilingual support: Although BERT has been pre-trained on multilingual text, Clinical BERT is currently designed for English language clinical text and may not perform well on clinical texts in other languages.
+print(summary)
