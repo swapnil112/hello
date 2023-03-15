@@ -9,10 +9,27 @@ text = "Input text to be summarized"
 # Tokenize the text into sentences
 sentences = sent_tokenize(text)
 
+# Load the pre-trained tokenizer and model
+model_name = 'bert-base-uncased'
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
 # Define a scoring function for each sentence
 def score_sentence(sentence):
-    # Implement a scoring function here
-    # For example, you can use TF-IDF or any other scoring method
+    # Tokenize the sentence and add special tokens
+    input_ids = tokenizer.encode(sentence, add_special_tokens=True, return_tensors='pt')
+    
+    # Generate the embedding for the sentence
+    with torch.no_grad():
+        output = model(input_ids)
+        last_hidden_state = output.last_hidden_state
+        sentence_embedding = torch.mean(last_hidden_state, dim=1).squeeze().numpy()
+    
+    # Implement a scoring function here using the sentence_embedding
+    # For example, you can use cosine similarity between the sentence_embedding
+    # and a predefined vector to compute the score
+    score = cosine_similarity(sentence_embedding, predefined_vector)
+    
     return score
 
 # Compute the score for each sentence
@@ -22,11 +39,6 @@ scores = [score_sentence(sentence) for sentence in sentences]
 n = 3
 selected_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:n]
 selected_sentences = [sentences[i] for i in selected_indices]
-
-# Load the pre-trained tokenizer and model
-model_name = 'bert-base-uncased'
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
 
 # Generate embeddings for the selected sentences
 embeddings = []
