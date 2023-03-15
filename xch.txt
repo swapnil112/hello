@@ -1,15 +1,47 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import nltk
+import numpy as np
+from nltk.tokenize import sent_tokenize
+from transformers import AutoTokenizer, AutoModel
 
-model_name = "patrickvonplaten/bert2bert_cnn_daily_mail"
+# Load the text data
+text = "Input text to be summarized"
+
+# Tokenize the text into sentences
+sentences = sent_tokenize(text)
+
+# Define a scoring function for each sentence
+def score_sentence(sentence):
+    # Implement a scoring function here
+    # For example, you can use TF-IDF or any other scoring method
+    return score
+
+# Compute the score for each sentence
+scores = [score_sentence(sentence) for sentence in sentences]
+
+# Select the top n sentences with the highest score
+n = 3
+selected_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:n]
+selected_sentences = [sentences[i] for i in selected_indices]
+
+# Load the pre-trained tokenizer and model
+model_name = 'bert-base-uncased'
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
 
-input_text = "Input text to be summarized"
+# Generate embeddings for the selected sentences
+embeddings = []
+for sentence in selected_sentences:
+    # Tokenize the sentence and add special tokens
+    input_ids = tokenizer.encode(sentence, add_special_tokens=True, return_tensors='pt')
+    
+    # Generate the embedding for the sentence
+    with torch.no_grad():
+        output = model(input_ids)
+        last_hidden_state = output.last_hidden_state
+        sentence_embedding = torch.mean(last_hidden_state, dim=1).squeeze().numpy()
+    
+    # Append the sentence embedding to the list of embeddings
+    embeddings.append(sentence_embedding)
 
-inputs = tokenizer(input_text, padding=True, truncation=True, max_length=1024, return_tensors="pt")
-
-summary_ids = model.generate(inputs['input_ids'], num_beams=4, max_length=100, early_stopping=True)
-
-summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-
-summary
+# Concatenate the embeddings of selected sentences
+selected_embeddings = np.concatenate(embeddings, axis=0)
