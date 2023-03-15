@@ -1,50 +1,5 @@
-import torch
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from transformers import AutoTokenizer, AutoModel
-
-# Load the pre-trained tokenizer and model
-model_name = 'bert-base-uncased'
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
-
-# Define the input text
-input_text = "Input text to be summarized"
-
-# Split the input text into sentences
-sentences = input_text.split('. ')
-
-# Compute the embedding for each sentence
-max_length = max([len(tokenizer.encode(sentence)) for sentence in sentences])
-sentence_embeddings = []
-for sentence in sentences:
-    # Encode the sentence using the BERT tokenizer with dynamic padding
-    encoded_sentence = tokenizer.encode(
-        sentence, 
-        add_special_tokens=True, 
-        max_length=max_length, 
-        padding='max_length',
-        truncation=True
-    )
-    
-    # Generate the embedding for the sentence
-    with torch.no_grad():
-        model_output = model(torch.tensor([encoded_sentence]))
-        sentence_embedding = torch.mean(model_output.last_hidden_state, dim=1).squeeze().numpy()
-        sentence_embeddings.append(sentence_embedding)
-
-# Define a predefined vector to score the sentences against
-predefined_vector = np.ones((len(sentence_embeddings[0]),))
-
-# Score each sentence and select the top sentences
-scores = []
-for sentence_embedding in sentence_embeddings:
-    score = cosine_similarity(sentence_embedding.reshape(1, -1), predefined_vector.reshape(1, -1))[0][0]
-    scores.append(score)
-    
-top_sentences_indices = np.argsort(scores)[-3:]
-
-# Generate the summary by concatenating the top sentences
-summary = '. '.join([sentences[i] for i in top_sentences_indices])
-
-print(summary)
+!pip install bert-extractive-summarizer
+from summarizer import Summarizer,TransformerSummarizer
+bert_model = Summarizer()
+bert_summary = ''.join(bert_model(body, min_length=60))
+print(bert_summary)
