@@ -1,5 +1,19 @@
-!pip install bert-extractive-summarizer
-from summarizer import Summarizer,TransformerSummarizer
-bert_model = Summarizer()
-bert_summary = ''.join(bert_model(body, min_length=60))
-print(bert_summary)
+from transformers import BertTokenizer, BertLMHeadModel
+
+# Load the pre-trained BERT model and tokenizer
+model_name = "bert-base-uncased"
+tokenizer = BertTokenizer.from_pretrained(model_name)
+model = BertLMHeadModel.from_pretrained(model_name)
+
+# Define the input text
+text = "Insert your text here."
+
+# Encode the input text
+inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+
+# Generate a summary
+summary_ids = model.generate(inputs['input_ids'], max_length=100, min_length=30, num_beams=4)
+summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+# Print the summary
+print(summary)
