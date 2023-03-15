@@ -1,18 +1,23 @@
-from transformers import BertTokenizer, BertLMHeadModel
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoTokenizer, T5ForConditionalGeneration
 
-# Load the pre-trained BERT model and tokenizer
-model_name = "bert-base-uncased"
-tokenizer = BertTokenizer.from_pretrained(model_name)
-model = BertLMHeadModel.from_pretrained(model_name)
+
+# Load the pre-trained T5 model and tokenizer
+# model_name = "luqh/ClinicalT5-base"
+# model = AutoModelForSeq2SeqLM.from_pretrained(model_name,from_flax=True)
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+tokenizer = AutoTokenizer.from_pretrained("ParastooC/t5_clinical_SA")
+model = T5ForConditionalGeneration.from_pretrained("ParastooC/t5_clinical_SA")
 
 # Define the input text
-text = "Insert your text here."
+text = "akash gupta is hero. you know that"
 
 # Encode the input text
-inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+input_ids = tokenizer.encode(text, return_tensors='pt')
 
 # Generate a summary
-summary_ids = model.generate(inputs['input_ids'], max_length=100, min_length=30, num_beams=4)
+summary_ids = model.generate(input_ids, max_length=50, num_beams=4, no_repeat_ngram_size=2, early_stopping=True)
 summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
 # Print the summary
