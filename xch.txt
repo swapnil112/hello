@@ -1,31 +1,31 @@
 from transformers import BertTokenizer, BertModel
-import numpy as np
+import torch
 from gensim.models import Word2Vec
+import numpy as np
 
 # Load the BERT tokenizer and model
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
 
+# Load the Word2Vec model
+word2vec_model = Word2Vec.load('path/to/word2vec/model')
+
 # Tokenize a sentence
 sentence = "The quick brown fox jumps over the lazy dog"
 tokens = tokenizer.tokenize(sentence)
 
-# Get the hidden states from BERT
+# Get the BERT embeddings
 input_ids = torch.tensor(tokenizer.encode(sentence)).unsqueeze(0)
 outputs = model(input_ids)
 hidden_states = outputs[2]
-
-# Average the hidden states to get a sentence-level representation
-sentence_embedding = torch.mean(hidden_states[-4:], dim=0).squeeze()
-
-# Convert the BERT embeddings to a numpy array
+last_four_layers = [hidden_states[i] for i in range(-4, 0)]
+sentence_embedding = torch.mean(torch.stack(last_four_layers), dim=0).squeeze()
 bert_embeddings = sentence_embedding.detach().numpy()
 
-# Train a Word2Vec model using the BERT embeddings
-word2vec_model = Word2Vec(size=100, window=5, min_count=1, workers=4)
-word2vec_model.build_vocab([tokens])
-word2vec_model.wv.vectors = np.array([bert_embeddings])
-word2vec_model.train([tokens], total_examples=1, epochs=1)
-
-# Get the Word2Vec embeddings for each token in the sentence
+# Compute the Word2Vec embeddings
+print(tokens)
+print(len(tokens))
 word2vec_embeddings = [word2vec_model.wv[token] for token in tokens]
+
+# Combine the BERT and Word2Vec embeddings
+combined_embeddings = np.concatenate((bert_embeddings, np.mean(word2vec_embeddings, axis=0)))
