@@ -1,24 +1,31 @@
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-from transformers import AutoTokenizer, T5ForConditionalGeneration
+from transformers import BertTokenizer, BertModel
+import numpy as np
+from gensim.models import Word2Vec
 
+# Load the BERT tokenizer and model
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
 
-# Load the pre-trained T5 model and tokenizer
-# model_name = "luqh/ClinicalT5-base"
-# model = AutoModelForSeq2SeqLM.from_pretrained(model_name,from_flax=True)
-# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Tokenize a sentence
+sentence = "The quick brown fox jumps over the lazy dog"
+tokens = tokenizer.tokenize(sentence)
 
-tokenizer = AutoTokenizer.from_pretrained("ParastooC/t5_clinical_SA")
-model = T5ForConditionalGeneration.from_pretrained("ParastooC/t5_clinical_SA")
+# Get the hidden states from BERT
+input_ids = torch.tensor(tokenizer.encode(sentence)).unsqueeze(0)
+outputs = model(input_ids)
+hidden_states = outputs[2]
 
-# Define the input text
-text = "akash gupta is hero. you know that"
+# Average the hidden states to get a sentence-level representation
+sentence_embedding = torch.mean(hidden_states[-4:], dim=0).squeeze()
 
-# Encode the input text
-input_ids = tokenizer.encode(text, return_tensors='pt')
+# Convert the BERT embeddings to a numpy array
+bert_embeddings = sentence_embedding.detach().numpy()
 
-# Generate a summary
-summary_ids = model.generate(input_ids, max_length=50, num_beams=4, no_repeat_ngram_size=2, early_stopping=True)
-summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+# Train a Word2Vec model using the BERT embeddings
+word2vec_model = Word2Vec(size=100, window=5, min_count=1, workers=4)
+word2vec_model.build_vocab([tokens])
+word2vec_model.wv.vectors = np.array([bert_embeddings])
+word2vec_model.train([tokens], total_examples=1, epochs=1)
 
-# Print the summary
-print(summary)
+# Get the Word2Vec embeddings for each token in the sentence
+word2vec_embeddings = [word2vec_model.wv[token] for token in tokens]
