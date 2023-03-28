@@ -164,3 +164,37 @@ df.drop('my_column', axis=1, inplace=True)
 
 # Print the resulting dataframe
 print(df)
+
+
+from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
+
+# Create a sample dataframe with a column containing comma-separated string values
+df = pd.DataFrame({'df_value': ['abc,def', 'def,abc,ghi']})
+
+# Split the comma-separated string values into lists of individual values
+df['df_value'] = df['df_value'].apply(lambda x: x.split(','))
+
+# Create a MultiLabelBinarizer object and fit it to the data
+mlb = MultiLabelBinarizer()
+mlb.fit(df['df_value'])
+
+# Transform the column into a binary matrix representation
+binary_matrix = mlb.transform(df['df_value'])
+
+# Create a new dataframe with the binary matrix columns
+binary_df = pd.DataFrame(binary_matrix, columns=mlb.classes_)
+
+# Concatenate the binary columns into a single column
+#binary_concat = pd.Series(binary_df.values.tolist()).apply(lambda x: ','.join(map(str, x)))
+binary_concat = pd.Series(binary_df.values.tolist()).apply(lambda x: [int(i) for i in x])
+
+
+# Add the concatenated binary column to the original dataframe
+df['binary_concat'] = binary_concat
+
+# Drop the original column containing comma-separated string values
+df.drop('df_value', axis=1, inplace=True)
+
+# Print the resulting dataframe
+print(df)
