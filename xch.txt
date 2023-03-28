@@ -138,3 +138,29 @@ threshold = 0.5
 y_pred_binary = (y_pred_prob > threshold).astype(int)
 
 print("Binary predictions:", y_pred_binary)
+
+
+from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
+
+# Create a sample dataframe with a column containing lists of values
+df = pd.DataFrame({'my_column': [[1, 2, 3], [2, 3], [4, 1, 2]]})
+
+# Create a MultiLabelBinarizer object and fit it to the data
+mlb = MultiLabelBinarizer()
+mlb.fit(df['my_column'])
+
+# Transform the column into a binary matrix representation
+binary_matrix = mlb.transform(df['my_column'])
+
+# Create a new dataframe with the binary matrix columns
+binary_df = pd.DataFrame(binary_matrix, columns=mlb.classes_)
+
+# Concatenate the new dataframe with the original dataframe
+df = pd.concat([df, binary_df], axis=1)
+
+# Drop the original column containing lists of values
+df.drop('my_column', axis=1, inplace=True)
+
+# Print the resulting dataframe
+print(df)
