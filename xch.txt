@@ -198,3 +198,38 @@ df.drop('df_value', axis=1, inplace=True)
 
 # Print the resulting dataframe
 print(df)
+
+
+import xgboost as xgb
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+# Generate some random data and labels
+X = np.random.rand(100, 10)
+y = np.random.randint(0, 2, size=(100, 5))
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Set up the XGBoost data matrices
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test, label=y_test)
+
+# Set up the XGBoost parameters
+params = {
+    'objective': 'binary:logistic',
+    'eval_metric': 'logloss',
+    'num_round': 10
+}
+
+# Train the XGBoost model
+model = xgb.train(params, dtrain)
+
+# Make predictions on the test set
+y_pred_prob = model.predict(dtest)
+
+# Threshold the predicted probabilities to get binary predictions
+threshold = 0.5
+y_pred_binary = (y_pred_prob > threshold).astype(int)
+
+print("Binary predictions:", y_pred_binary)
