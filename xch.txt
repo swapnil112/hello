@@ -301,31 +301,29 @@ for i in range(5):
 
 
 import pandas as pd
+import numpy as np
 
-# assuming you have a dataframe 'df' with the target variable 'target'
-target_col = "target"
+# assuming you have a dataframe 'df' with multiple multi-label target variables
+target_cols = ["target1", "target2", "target3", "target4", "target5"]
 
-# compute the number of instances in each class
-class_counts = df[target_col].value_counts()
+# loop over each target column and compute its profiling report
+for col in target_cols:
+    # compute the number of instances with each label
+    label_counts = pd.Series(np.concatenate(df[col].values)).value_counts()
 
-# compute the distribution of the target variable
-dist = class_counts / len(df)
+    # compute the distribution of the labels
+    dist = label_counts / len(df)
 
-# compute the mean, median, and standard deviation of the target variable
-mean = df[target_col].mean()
-median = df[target_col].median()
-std = df[target_col].std()
+    # compute the mean, median, and standard deviation of the number of labels per instance
+    num_labels = df[col].apply(lambda x: len(x))
+    mean_num_labels = num_labels.mean()
+    median_num_labels = num_labels.median()
+    std_num_labels = num_labels.std()
 
-# compute the minimum and maximum values of the target variable
-min_val = df[target_col].min()
-max_val = df[target_col].max()
-
-# print the target profiling report
-print(f"Target profiling report:\n"
-      f"------------------------\n"
-      f"Distribution:\n{dist}\n"
-      f"Mean: {mean:.3f}\n"
-      f"Median: {median:.3f}\n"
-      f"Standard deviation: {std:.3f}\n"
-      f"Minimum value: {min_val}\n"
-      f"Maximum value: {max_val}")
+    # print the target profiling report for this column
+    print(f"{col} profiling report:\n"
+          f"------------------------\n"
+          f"Distribution of labels:\n{dist}\n"
+          f"Mean number of labels per instance: {mean_num_labels:.3f}\n"
+          f"Median number of labels per instance: {median_num_labels:.3f}\n"
+          f"Standard deviation of number of labels per instance: {std_num_labels:.3f}\n")
