@@ -281,3 +281,20 @@ print("Recall:", rec)
 # Compute F1 score
 f1 = f1_score(y_true_flat, y_pred_flat)
 print("F1 score:", f1)
+
+
+from sklearn.metrics import classification_report
+import pandas as pd
+
+# assuming you have two dataframes 'df_pred' and 'df_real'
+# with 5 columns each
+for i in range(5):
+    # get the predicted and actual labels for the i-th column
+    y_pred = df_pred.iloc[:, i]
+    y_true = df_real.iloc[:, i]
+    
+    # compute the classification report
+    report = classification_report(y_true, y_pred)
+    
+    # print the report for the i-th column
+    print(f"Column {i+1}:\n{report}\n")
