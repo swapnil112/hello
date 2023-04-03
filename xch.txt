@@ -327,3 +327,28 @@ for col in target_cols:
           f"Mean number of labels per instance: {mean_num_labels:.3f}\n"
           f"Median number of labels per instance: {median_num_labels:.3f}\n"
           f"Standard deviation of number of labels per instance: {std_num_labels:.3f}\n")
+          
+          
+ from sklearn.metrics import classification_report
+import pandas as pd
+
+# assuming you have two dataframes 'df_pred' and 'df_real'
+# with 5 columns each
+reports = []
+for i in range(5):
+    # get the predicted and actual labels for the i-th column
+    y_pred = df_pred.iloc[:, i]
+    y_true = df_real.iloc[:, i]
+    
+    # compute the classification report
+    report = classification_report(y_true, y_pred, output_dict=True)
+    
+    # append the report for the i-th column to the list of reports
+    reports.append(pd.DataFrame(report).transpose())
+    
+# concatenate the reports for all columns into a single dataframe
+df_report = pd.concat(reports, axis=1)
+
+# print the dataframe
+print(df_report)
+
