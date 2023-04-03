@@ -233,3 +233,51 @@ threshold = 0.5
 y_pred_binary = (y_pred_prob > threshold).astype(int)
 
 print("Binary predictions:", y_pred_binary)
+
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import numpy as np
+
+# Assuming your predicted labels are stored in a NumPy array 'y_pred'
+y_pred = np.array([[0, 1, 0, 1, 0],
+                   [1, 0, 1, 0, 0],
+                   [0, 1, 1, 0, 0],
+                   [1, 0, 1, 0, 1],
+                   [0, 0, 1, 1, 0],
+                   [1, 1, 0, 0, 1],
+                   [0, 0, 0, 1, 1],
+                   [1, 1, 1, 0, 1],
+                   [0, 1, 0, 0, 1],
+                   [1, 0, 0, 1, 0]])
+
+# Assuming the actual labels are stored in a NumPy array 'y_true'
+y_true = np.array([[0, 1, 0, 1, 1],
+                   [1, 0, 1, 0, 1],
+                   [0, 1, 1, 0, 0],
+                   [1, 0, 1, 0, 1],
+                   [0, 0, 1, 1, 0],
+                   [1, 1, 0, 0, 1],
+                   [0, 0, 0, 1, 0],
+                   [1, 1, 1, 0, 1],
+                   [0, 1, 0, 0, 1],
+                   [1, 0, 0, 1, 0]])
+
+# Convert both y_pred and y_true to 1D arrays
+y_pred_flat = y_pred.flatten()
+y_true_flat = y_true.flatten()
+
+# Compute accuracy
+acc = accuracy_score(y_true_flat, y_pred_flat)
+print("Accuracy:", acc)
+
+# Compute precision
+prec = precision_score(y_true_flat, y_pred_flat)
+print("Precision:", prec)
+
+# Compute recall
+rec = recall_score(y_true_flat, y_pred_flat)
+print("Recall:", rec)
+
+# Compute F1 score
+f1 = f1_score(y_true_flat, y_pred_flat)
+print("F1 score:", f1)
