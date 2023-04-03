@@ -298,3 +298,34 @@ for i in range(5):
     
     # print the report for the i-th column
     print(f"Column {i+1}:\n{report}\n")
+
+
+import pandas as pd
+
+# assuming you have a dataframe 'df' with the target variable 'target'
+target_col = "target"
+
+# compute the number of instances in each class
+class_counts = df[target_col].value_counts()
+
+# compute the distribution of the target variable
+dist = class_counts / len(df)
+
+# compute the mean, median, and standard deviation of the target variable
+mean = df[target_col].mean()
+median = df[target_col].median()
+std = df[target_col].std()
+
+# compute the minimum and maximum values of the target variable
+min_val = df[target_col].min()
+max_val = df[target_col].max()
+
+# print the target profiling report
+print(f"Target profiling report:\n"
+      f"------------------------\n"
+      f"Distribution:\n{dist}\n"
+      f"Mean: {mean:.3f}\n"
+      f"Median: {median:.3f}\n"
+      f"Standard deviation: {std:.3f}\n"
+      f"Minimum value: {min_val}\n"
+      f"Maximum value: {max_val}")
