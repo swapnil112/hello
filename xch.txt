@@ -1,97 +1,48 @@
-import pandas as pd
+from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix
 
-# Create an empty dictionary to store the counts
-def cnt(df):
-  print('Output by column individual :\n', df.sum())
-  df.insert(loc=0, column='id', value=df.index)
-  counts = {}
-  # Iterate through the columns and count the number of times each combination of columns appears
-  for col in df.columns[1:]:
-    temp_df = df.loc[df[col] == 1]
-    temp_counts = temp_df.drop(['id'], axis=1).apply(lambda x: ','.join(x.index[x == 1]), axis=1).value_counts()
-    counts.update(temp_counts.to_dict())
+# Dummy data
+y_true = [1, 0, 1, 1, 0, 1, 0, 1, 0, 0]
+y_pred = [1, 1, 1, 0, 0, 1, 0, 0, 1, 0]
 
-  # Convert the dictionary to a DataFrame and sort by the column names
-  result = pd.DataFrame(list(counts.items()), columns=['column', 'value']).sort_values(by=['column'])
+# F1-score (macro)
+f1_macro = f1_score(y_true, y_pred, average='macro')
 
-  print('Output by column:\n', result)
+# F1-score (weighted)
+f1_weighted = f1_score(y_true, y_pred, average='weighted')
+
+# Support
+support = confusion_matrix(y_true, y_pred)
+
+# Precision
+precision = precision_score(y_true, y_pred)
+
+# Recall
+recall = recall_score(y_true, y_pred)
+
+# TP, FP, TN, FN
+tp, fp, tn, fn = confusion_matrix(y_true, y_pred).ravel()
+
+print("F1-score (macro):", f1_macro)
+print("F1-score (weighted):", f1_weighted)
+print("Support:\n", support)
+print("Precision:", precision)
+print("Recall:", recall)
+print("TP:", tp)
+print("FP:", fp)
+print("TN:", tn)
+print("FN:", fn)
 
 
-import numpy as np
-import pandas as pd
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
-# Step 1: Identify the labels
-labels = ['label1', 'label2', 'label3', 'label4']
+# Dummy data
+y_true = [1, 0, 1, 1, 0, 1, 0, 1, 0, 0]
+y_pred = [1, 1, 1, 0, 0, 1, 0, 0, 1, 0]
 
-# Step 2: Calculate performance metrics
-y_train = pd.DataFrame({'label1': [1, 0, 1, 0], 'label2': [0, 1, 1, 1], 'label3': [1, 0, 0, 1], 'label4': [0, 1, 0, 0]})
-y_pred = pd.DataFrame({'label1': [1, 0, 1, 0], 'label2': [0, 0, 1, 1], 'label3': [1, 0, 0, 0], 'label4': [0, 1, 0, 0]})
+# Classification report
+class_report = classification_report(y_true, y_pred, output_dict=True)
 
-precision_scores = []
-recall_scores = []
-f1_scores = []
-accuracy_scores = []
-TPR_scores = []
-TP_scores = []
-FP_scores = []
-TN_scores = []
-FN_scores = []
-
-for label in labels:
-    TP = sum((y_train[label] == 1) & (y_pred[label] == 1))
-    FP = sum((y_train[label] == 0) & (y_pred[label] == 1))
-    TN = sum((y_train[label] == 0) & (y_pred[label] == 0))
-    FN = sum((y_train[label] == 1) & (y_pred[label] == 0))
-
-    TPR = TP / (TP + FN) # True Positive Rate
-    precision = TP / (TP + FP)
-    recall = TP / (TP + FN)
-    f1 = 2 * precision * recall / (precision + recall)
-    accuracy = (TP + TN) / (TP + TN + FP + FN)
-
-    TPR_scores.append(TPR)
-    TP_scores.append(TP)
-    FP_scores.append(FP)
-    TN_scores.append(TN)
-    FN_scores.append(FN)
-    precision_scores.append(precision)
-    recall_scores.append(recall)
-    f1_scores.append(f1)
-    accuracy_scores.append(accuracy)
-
-# Step 3: Sort the labels
-sorted_labels = [label for _, label in sorted(zip(f1_scores, labels), reverse=True)]
-
-# Step 4: Create a portfolio
-portfolio = sorted_labels[:3] # Select top 3 labels with highest F1-score
-
-# Step 5: Evaluate the portfolio
-portfolio_precision = []
-portfolio_recall = []
-portfolio_f1 = []
-portfolio_accuracy = []
-portfolio_TPR = []
-
-for label in portfolio:
-    portfolio_precision.append(precision_scores[labels.index(label)])
-    portfolio_recall.append(recall_scores[labels.index(label)])
-    portfolio_f1.append(f1_scores[labels.index(label)])
-    portfolio_accuracy.append(accuracy_scores[labels.index(label)])
-    portfolio_TPR.append(TPR_scores[labels.index(label)])
-
-mean_portfolio_precision = np.mean(portfolio_precision)
-mean_portfolio_recall = np.mean(portfolio_recall)
-mean_portfolio_f1 = np.mean(portfolio_f1)
-mean_portfolio_accuracy = np.mean(portfolio_accuracy)
-mean_portfolio_TPR = np.mean(portfolio_TPR)
-
-# Step 6: Refine the portfolio
-# Make changes to the portfolio based on performance
-
-print('Portfolio: ', portfolio)
-print('Mean Precision: ', mean_portfolio_precision)
-print('Mean Recall: ', mean_portfolio_recall)
-print('Mean F1-score: ', mean_portfolio_f1)
-print('Mean Accuracy: ', mean_portfolio_accuracy)
-print('Mean TPR: ', mean
+# Print support for each class
+for class_label, metrics in class_report.items():
+    print("Class:", class_label)
+    print("Support:", metrics["support"])
