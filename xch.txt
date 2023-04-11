@@ -46,3 +46,19 @@ class_report = classification_report(y_true, y_pred, output_dict=True)
 for class_label, metrics in class_report.items():
     print("Class:", class_label)
     print("Support:", metrics["support"])
+    
+    
+df = pd.DataFrame(data)
+
+match_rates = []
+
+for index, row in df.iterrows():
+    set1 = set(row['column1'])
+    set2 = set(row['column2'])
+    intersection = set1.intersection(set2)
+    match_rate = len(intersection) / len(set1) * 100
+    match_rates.append(match_rate)
+
+df['match_rate'] = match_rates
+
+print(df)
