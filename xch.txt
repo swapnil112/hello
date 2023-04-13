@@ -1,22 +1,18 @@
 import pandas as pd
+from sklearn.metrics import classification_report
 
-# Create the original dataframe with string columns
-df = pd.DataFrame({'col': [ {('a',1),('b',0),('c',1)}, {('d',0),('a',1)} ]})
+# generate classification report for y_pred and y_real
+report_pred_real = classification_report(y_real, y_pred, output_dict=True)
+report_pred_real_df = pd.DataFrame(report_pred_real).transpose()
+report_pred_real_df.index.name = "Dataset (y_pred vs y_real)"
 
-# Create a new dataframe with columns as the unique column names
-new_df = pd.DataFrame(columns=sorted(set([pair[0] for row in df['col'] for pair in row])))
+# generate classification report for y_com and y_real
+report_com_real = classification_report(y_real, y_com, output_dict=True)
+report_com_real_df = pd.DataFrame(report_com_real).transpose()
+report_com_real_df.index.name = "Dataset (y_com vs y_real)"
 
-# Fill the new dataframe with values
-rows = []
-for i, row in df.iterrows():
-    new_row = {}
-    for pair in row['col']:
-        new_row[pair[0]] = pair[1]
-    rows.append(new_row)
-new_df = pd.concat([new_df, pd.DataFrame(rows)], ignore_index=True)
+# combine the classification reports for all datasets
+combined_report_df = pd.concat([report_pred_real_df, report_com_real_df])
 
-# Replace NaN values with '-' in the new dataframe
-new_df = new_df.fillna('-').astype(str)
-
-# Print the new dataframe
-print(new_df)
+# print the combined report
+print("Combined classification report:\n", combined_report_df)
