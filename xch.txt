@@ -1,25 +1,22 @@
 import pandas as pd
 
-df = pd.DataFrame({'col': [ "{('a',1),('b',0),('c',1)}", "{('d',0),('a',1)}" ]})
+# Create the original dataframe with string columns
+df = pd.DataFrame({'col': [ {('a',1),('b',0),('c',1)}, {('d',0),('a',1)} ]})
 
-# Create a list of dictionaries
-keys = set()
-dicts = []
-for s in df['col']:
-    d = dict(eval(s))
-    dict_keys = d.keys()
-    for key in keys:
-        if key not in dict_keys:
-            d[key] = '-'
-    dicts.append(d)
+# Create a new dataframe with columns as the unique column names
+new_df = pd.DataFrame(columns=sorted(set([pair[0] for row in df['col'] for pair in row])))
 
-# Create a new DataFrame
-new_df = pd.DataFrame(dicts)
+# Fill the new dataframe with values
+rows = []
+for i, row in df.iterrows():
+    new_row = {}
+    for pair in row['col']:
+        new_row[pair[0]] = pair[1]
+    rows.append(new_row)
+new_df = pd.concat([new_df, pd.DataFrame(rows)], ignore_index=True)
 
-# Drop columns with non-numeric values
-new_df = new_df.drop([col for col in new_df.columns if new_df[col].dtype == object], axis=1)
+# Replace NaN values with '-' in the new dataframe
+new_df = new_df.fillna('-').astype(str)
 
-# Sort columns alphabetically
-new_df = new_df.reindex(sorted(new_df.columns), axis=1)
-
+# Print the new dataframe
 print(new_df)
