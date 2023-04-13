@@ -1,23 +1,34 @@
-from sklearn.metrics import classification_report
-from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
 
-# combine all datasets into a list of tuples
-all_data = list(zip(y_real, y_pred, y_com))
+# Create the original dataframe with string columns
+df = pd.DataFrame({'col': [ {('a',1),('b',0),('c',1)}, {('d',0),('a',1)} ]})
 
-# create a MultiLabelBinarizer object
-mlb = MultiLabelBinarizer()
+# Create a new dataframe with columns as the unique column names
+new_df = pd.DataFrame(columns=sorted(set([pair[0] for row in df['col'] for pair in row])))
 
-# convert all datasets to have multi-label indicators
-y_real_mlb = mlb.fit_transform([[label] for label in y_real])
-y_pred_mlb = mlb.transform([[label] for label in y_pred])
-y_com_mlb = mlb.transform([[label] for label in y_com])
+# Fill the new dataframe with values
+rows = []
+for i, row in df.iterrows():
+    new_row = {}
+    for pair in row['col']:
+        new_row[pair[0]] = pair[1]
+    rows.append(new_row)
+new_df = pd.concat([new_df, pd.DataFrame(rows)], ignore_index=True)
 
-# generate classification report for all datasets
-report_all = classification_report(y_real_mlb, y_pred_mlb, labels=mlb.classes_, output_dict=True)
+# Replace NaN values with '-' in the new dataframe
+new_df = new_df.fillna('-').astype(str)
 
-# convert the classification report to a DataFrame and add dataset names as index
-report_all_df = pd.DataFrame(report_all).transpose()
-report_all_df.index.name = "Dataset (y_pred vs y_real vs y_com)"
+# Print the new dataframe
+print(new_df)
 
-# print the classification report for all datasets
-print("Classification report for all datasets:\n", report_all_df)
+
+import pandas as pd
+import ast
+
+# create example dataframe
+df = pd.DataFrame({'set_col': ['{(1,0),(2,1)}', '{(3,2),(4,3),(5,2)}']})
+
+# apply ast.literal_eval to each row of set_col
+df['set_col'] = df['set_col'].apply(ast.literal_eval)
+
+print(df)
