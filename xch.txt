@@ -1,19 +1,23 @@
-from sklearn.metrics import multilabel_confusion_matrix, classification_report
+from sklearn.metrics import classification_report
+from sklearn.preprocessing import MultiLabelBinarizer
 
-# calculate confusion matrix for y_pred and y_real
-confusion_pred_real = multilabel_confusion_matrix(y_real, y_pred)
+# combine all datasets into a list of tuples
+all_data = list(zip(y_real, y_pred, y_com))
 
-# calculate classification report for y_pred and y_real
-report_pred_real = classification_report(y_real, y_pred)
+# create a MultiLabelBinarizer object
+mlb = MultiLabelBinarizer()
 
-# calculate confusion matrix for y_com and y_real
-confusion_com_real = multilabel_confusion_matrix(y_real, y_com)
+# convert all datasets to have multi-label indicators
+y_real_mlb = mlb.fit_transform([[label] for label in y_real])
+y_pred_mlb = mlb.transform([[label] for label in y_pred])
+y_com_mlb = mlb.transform([[label] for label in y_com])
 
-# calculate classification report for y_com and y_real
-report_com_real = classification_report(y_real, y_com)
+# generate classification report for all datasets
+report_all = classification_report(y_real_mlb, y_pred_mlb, labels=mlb.classes_, output_dict=True)
 
-# print the confusion matrices and classification reports
-print("Confusion matrix (y_pred vs y_real):\n", confusion_pred_real)
-print("Classification report (y_pred vs y_real):\n", report_pred_real)
-print("Confusion matrix (y_com vs y_real):\n", confusion_com_real)
-print("Classification report (y_com vs y_real):\n", report_com_real)
+# convert the classification report to a DataFrame and add dataset names as index
+report_all_df = pd.DataFrame(report_all).transpose()
+report_all_df.index.name = "Dataset (y_pred vs y_real vs y_com)"
+
+# print the classification report for all datasets
+print("Classification report for all datasets:\n", report_all_df)
