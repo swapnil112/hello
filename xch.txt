@@ -1,64 +1,20 @@
-from sklearn.metrics import f1_score, precision_score, recall_score, confusion_matrix
+import pandas as pd
 
-# Dummy data
-y_true = [1, 0, 1, 1, 0, 1, 0, 1, 0, 0]
-y_pred = [1, 1, 1, 0, 0, 1, 0, 0, 1, 0]
+# Create the original dataframe
+df = pd.DataFrame({'col': [ {('a',1),('b',0),('c',1)}, {('d',0),('a',1)} ]})
 
-# F1-score (macro)
-f1_macro = f1_score(y_true, y_pred, average='macro')
+# Create a new dataframe with columns as the unique column names
+new_df = pd.DataFrame(columns=sorted(set([pair[0] for row in df['col'] for pair in row])))
 
-# F1-score (weighted)
-f1_weighted = f1_score(y_true, y_pred, average='weighted')
+# Fill the new dataframe with values
+for i, row in df.iterrows():
+    new_row = {}
+    for pair in row['col']:
+        new_row[pair[0]] = pair[1]
+    new_df = new_df.append(new_row, ignore_index=True)
 
-# Support
-support = confusion_matrix(y_true, y_pred)
+# Replace NaN values with '-' in the new dataframe
+new_df = new_df.fillna('-')
 
-# Precision
-precision = precision_score(y_true, y_pred)
-
-# Recall
-recall = recall_score(y_true, y_pred)
-
-# TP, FP, TN, FN
-tp, fp, tn, fn = confusion_matrix(y_true, y_pred).ravel()
-
-print("F1-score (macro):", f1_macro)
-print("F1-score (weighted):", f1_weighted)
-print("Support:\n", support)
-print("Precision:", precision)
-print("Recall:", recall)
-print("TP:", tp)
-print("FP:", fp)
-print("TN:", tn)
-print("FN:", fn)
-
-
-from sklearn.metrics import classification_report
-
-# Dummy data
-y_true = [1, 0, 1, 1, 0, 1, 0, 1, 0, 0]
-y_pred = [1, 1, 1, 0, 0, 1, 0, 0, 1, 0]
-
-# Classification report
-class_report = classification_report(y_true, y_pred, output_dict=True)
-
-# Print support for each class
-for class_label, metrics in class_report.items():
-    print("Class:", class_label)
-    print("Support:", metrics["support"])
-    
-    
-df = pd.DataFrame(data)
-
-match_rates = []
-
-for index, row in df.iterrows():
-    set1 = set(row['column1'])
-    set2 = set(row['column2'])
-    intersection = set1.intersection(set2)
-    match_rate = len(intersection) / len(set1) * 100
-    match_rates.append(match_rate)
-
-df['match_rate'] = match_rates
-
-print(df)
+# Print the new dataframe
+print(new_df)
