@@ -1,34 +1,3 @@
-import pandas as pd
+As a dedicated team member, I prioritize people first and foremost, always striving to improve my own performance and contribute to the growth and development of the team. I believe in the principle of all for one and one for all, recognizing that by working together and supporting each other, we can achieve greater success than any individual could alone. Furthermore, I understand that my responsibilities go beyond my job description and am committed to continually developing my skills and knowledge to make a more meaningful and impactful contribution to the team and organization. Through these efforts, I aim to become a better professional and a more valuable team member, benefitting both myself and those around me.
 
-# Create the original dataframe with string columns
-df = pd.DataFrame({'col': [ {('a',1),('b',0),('c',1)}, {('d',0),('a',1)} ]})
-
-# Create a new dataframe with columns as the unique column names
-new_df = pd.DataFrame(columns=sorted(set([pair[0] for row in df['col'] for pair in row])))
-
-# Fill the new dataframe with values
-rows = []
-for i, row in df.iterrows():
-    new_row = {}
-    for pair in row['col']:
-        new_row[pair[0]] = pair[1]
-    rows.append(new_row)
-new_df = pd.concat([new_df, pd.DataFrame(rows)], ignore_index=True)
-
-# Replace NaN values with '-' in the new dataframe
-new_df = new_df.fillna('-').astype(str)
-
-# Print the new dataframe
-print(new_df)
-
-
-import pandas as pd
-import ast
-
-# create example dataframe
-df = pd.DataFrame({'set_col': ['{(1,0),(2,1)}', '{(3,2),(4,3),(5,2)}']})
-
-# apply ast.literal_eval to each row of set_col
-df['set_col'] = df['set_col'].apply(ast.literal_eval)
-
-print(df)
+As a committed team member, I prioritize the well-being of people above all else, consistently evaluating my own performance and identifying areas for growth and development. I proactively seek guidance and support from senior colleagues, while also mentoring new team members wherever possible, all with the goal of enhancing my knowledge and skills. I believe in the principle of collective success, recognizing that by working together and supporting each other, we can achieve greater heights. Furthermore, I understand that my responsibilities extend beyond my job description, and I am dedicated to continuous improvement in order to make a more meaningful and impactful contribution to the team and organization. Through these efforts, I strive to become a better professional and a more valuable team member, ultimately benefiting both myself and the organization as a whole.
