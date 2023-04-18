@@ -1,9 +1,24 @@
-I'm writing to provide an overview of my performance as a data scientist during the appraisal period. I'm proud of the work that I accomplished during this time and appreciate the opportunity to reflect on my achievements and areas for improvement.
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
 
-As a data scientist, I had the privilege of working on several machine learning projects. I thoroughly enjoyed working with my team members and appreciated the opportunity to take on emerging projects that contributed to my professional development and helped me deepen my business knowledge.
+nltk.download('punkt')
+nltk.download('wordnet')
 
-I'm particularly proud of my ability to analyze complex data and develop innovative solutions to business problems. I consistently produced high-quality work and effectively communicated my findings to stakeholders across the organization.
+# Sample text
+text = "The quick brown foxes jumped over the lazy dogs"
 
-Moving forward, I recognize that I can improve my time management and task prioritization skills. I plan to set clearer goals and timelines for my work and seek feedback from colleagues on how to improve my productivity.
+# Tokenize the text
+tokens = word_tokenize(text)
 
-I'm committed to continuing to contribute to the company's goals and values, and I appreciate your support and guidance throughout the appraisal period. Thank you for your time and consideration.
+# Apply stemming using the Porter stemmer
+stemmer = PorterStemmer()
+stemmed_tokens = [stemmer.stem(token) for token in tokens]
+
+# Apply lemmatization using the WordNet lemmatizer
+lemmatizer = WordNetLemmatizer()
+lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+
+print("Original text:", text)
+print("Stemmed tokens:", stemmed_tokens)
+print("Lemmatized tokens:", lemmatized_tokens)
