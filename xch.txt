@@ -22,3 +22,29 @@ lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
 print("Original text:", text)
 print("Stemmed tokens:", stemmed_tokens)
 print("Lemmatized tokens:", lemmatized_tokens)
+
+
+import spacy
+from transformers import BertTokenizer
+
+# Load the BERT tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# Load the spaCy lemmatizer
+nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
+
+# Example sentence
+text = "I am running in the park"
+
+# Tokenize the text using the BERT tokenizer
+tokens = tokenizer.tokenize(text)
+
+# Convert the tokens back to text
+text = ' '.join(tokens)
+
+# Apply lemmatization using spaCy
+doc = nlp(text)
+lemmatized_tokens = [token.lemma_ for token in doc]
+
+print("Original text:", text)
+print("Lemmatized tokens:", lemmatized_tokens)
