@@ -1,50 +1,46 @@
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.stem import PorterStemmer, WordNetLemmatizer
+import xgboost as xgb
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
-nltk.download('punkt')
-nltk.download('wordnet')
+# Load data
+data = pd.read_csv('data.csv')
+X = data.drop(['target'], axis=1)
+y = data['target']
 
-# Sample text
-text = "The quick brown foxes jumped over the lazy dogs"
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Tokenize the text
-tokens = word_tokenize(text)
+# Define hyperparameters
+params = {
+    'objective': 'binary:logistic',
+    'eval_metric': 'logloss',
+    'eta': 0.1,
+    'max_depth': 6,
+    'subsample': 0.8,
+    'colsample_bytree': 0.8,
+    'n_estimators': 100 # set n_estimators as a hyperparameter
+}
 
-# Apply stemming using the Porter stemmer
-stemmer = PorterStemmer()
-stemmed_tokens = [stemmer.stem(token) for token in tokens]
+# Convert training and testing data to DMatrix format
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dtest = xgb.DMatrix(X_test, label=y_test)
 
-# Apply lemmatization using the WordNet lemmatizer
-lemmatizer = WordNetLemmatizer()
-lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
+# Train the model using cross-validation
+cv_results = xgb.cv(params=params, dtrain=dtrain, num_boost_round=params['n_estimators'], nfold=5,
+                    early_stopping_rounds=10, metrics='logloss', seed=42)
 
-print("Original text:", text)
-print("Stemmed tokens:", stemmed_tokens)
-print("Lemmatized tokens:", lemmatized_tokens)
+# Get the optimal number of boosting rounds based on the cross-validation results
+num_boost_rounds = len(cv_results)
+print(f'Optimal number of boosting rounds: {num_boost_rounds}')
 
+# Train the model with the optimal number of boosting rounds
+model = xgb.train(params=params, dtrain=dtrain, num_boost_round=num_boost_rounds, evals=[(dtest, 'Test')])
 
-import spacy
-from transformers import BertTokenizer
+# Make predictions on the test set
+preds = model.predict(dtest)
 
-# Load the BERT tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
-# Load the spaCy lemmatizer
-nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
-
-# Example sentence
-text = "I am running in the park"
-
-# Tokenize the text using the BERT tokenizer
-tokens = tokenizer.tokenize(text)
-
-# Convert the tokens back to text
-text = ' '.join(tokens)
-
-# Apply lemmatization using spaCy
-doc = nlp(text)
-lemmatized_tokens = [token.lemma_ for token in doc]
-
-print("Original text:", text)
-print("Lemmatized tokens:", lemmatized_tokens)
+# Evaluate the model
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+print(f'Accuracy score: {accuracy_score(y_test, preds.round())}')
+print(f'Confusion matrix: \n{confusion_matrix(y_test, preds.round())}')
+print(f'Classification report: \n{classification_report(y_test, preds.round())}')
