@@ -1,46 +1,23 @@
-import xgboost as xgb
-import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 
-# Load data
-data = pd.read_csv('data.csv')
-X = data.drop(['target'], axis=1)
-y = data['target']
+y_true = [1, 0, 1, 0, 1, 1, 0, 0]
+y_pred = [1, 1, 0, 0, 1, 0, 1, 0]
 
-# Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Calculate confusion matrix
+cm = confusion_matrix(y_true, y_pred)
 
-# Define hyperparameters
-params = {
-    'objective': 'binary:logistic',
-    'eval_metric': 'logloss',
-    'eta': 0.1,
-    'max_depth': 6,
-    'subsample': 0.8,
-    'colsample_bytree': 0.8,
-    'n_estimators': 100 # set n_estimators as a hyperparameter
-}
+# Extract individual level-wise counts
+tn_0, fp_0, fn_0, tp_0 = cm[0, 0], cm[0, 1], cm[1, 0], cm[1, 1]
+tn_1, fp_1, fn_1, tp_1 = cm[1, 1], cm[1, 0], cm[0, 1], cm[0, 0]
 
-# Convert training and testing data to DMatrix format
-dtrain = xgb.DMatrix(X_train, label=y_train)
-dtest = xgb.DMatrix(X_test, label=y_test)
+print("Class 0")
+print("TP:", tp_0)
+print("FP:", fp_0)
+print("TN:", tn_0)
+print("FN:", fn_0)
 
-# Train the model using cross-validation
-cv_results = xgb.cv(params=params, dtrain=dtrain, num_boost_round=params['n_estimators'], nfold=5,
-                    early_stopping_rounds=10, metrics='logloss', seed=42)
-
-# Get the optimal number of boosting rounds based on the cross-validation results
-num_boost_rounds = len(cv_results)
-print(f'Optimal number of boosting rounds: {num_boost_rounds}')
-
-# Train the model with the optimal number of boosting rounds
-model = xgb.train(params=params, dtrain=dtrain, num_boost_round=num_boost_rounds, evals=[(dtest, 'Test')])
-
-# Make predictions on the test set
-preds = model.predict(dtest)
-
-# Evaluate the model
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-print(f'Accuracy score: {accuracy_score(y_test, preds.round())}')
-print(f'Confusion matrix: \n{confusion_matrix(y_test, preds.round())}')
-print(f'Classification report: \n{classification_report(y_test, preds.round())}')
+print("Class 1")
+print("TP:", tp_1)
+print("FP:", fp_1)
+print("TN:", tn_1)
+print("FN:", fn_1)
