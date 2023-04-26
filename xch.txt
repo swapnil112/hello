@@ -24,3 +24,31 @@ top_feature_names = [[feature_names[index] for index in tfidf_scores.argsort()[:
 # Print top feature names for first 5 documents
 for i in range(5):
     print(f"Top features for document {i}: {top_feature_names[i]}")
+
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+
+# Create example data
+data = ['This is the first document.',
+        'This document is the second document.',
+        'And this is the third one.',
+        'Is this the first document?',]
+
+# Create TfidfVectorizer
+vectorizer = TfidfVectorizer()
+
+# Vectorize data and compute tf-idf scores
+X = vectorizer.fit_transform(data)
+
+# Get feature names
+feature_names = vectorizer.get_feature_names()
+
+# Create pandas DataFrame from tf-idf matrix
+df = pd.DataFrame(X.todense(), columns=feature_names)
+
+# Sort DataFrame by highest tf-idf scores
+sorted_df = df.T.sort_values(by=0, ascending=False)
+
+# Print sorted DataFrame
+print(sorted_df)
