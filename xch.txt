@@ -1,2 +1,25 @@
-for i, feature in enumerate(model.get_booster().feature_names):
-    print("{}: {:.3f}".format(feature, pred_contribs[0, i+1]))
+import pandas as pd
+import numpy as np
+
+# Create a 3-dimensional array
+data = np.random.rand(20000, 5, 10)
+
+# Flatten the 3-dimensional array into a 2-dimensional array
+flat_data = data.reshape(-1, data.shape[-1])
+
+# Create a dataframe from the flattened array
+df = pd.DataFrame(flat_data)
+
+# Add column names for each of the 10 columns
+df.columns = [f'col{i}' for i in range(1, 11)]
+
+# Add a new column for the 2nd dimension
+df['dim2'] = np.repeat(range(data.shape[1]), data.shape[0]*data.shape[2])
+
+# Add a new column for the 1st dimension
+df['dim1'] = np.tile(range(data.shape[0]), data.shape[1]*data.shape[2])
+
+# Optional: set the index as a multi-index based on the first two dimensions
+df.set_index(['dim1', 'dim2'], inplace=True)
+
+print(df)
