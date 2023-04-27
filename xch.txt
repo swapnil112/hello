@@ -1,25 +1,48 @@
 import pandas as pd
-import numpy as np
 
-# Create a 3-dimensional array
-data = np.random.rand(20000, 5, 10)
+# create the first dataframe
+df1 = pd.DataFrame({
+        'id': [1, 2, 3],
+        'col1': [10, 11, 10],
+        'col2': [11, 10, 1],
+        'col3': [12, 1, 2]
+    })
 
-# Flatten the 3-dimensional array into a 2-dimensional array
-flat_data = data.reshape(-1, data.shape[-1])
+# create the second dataframe
+df2 = pd.DataFrame({
+        'id': [1, 2, 3],
+        'target': [['col1', 'col2'], ['col2', 'col3'], ['col1']]
+    })
 
-# Create a dataframe from the flattened array
-df = pd.DataFrame(flat_data)
+# iterate over the rows of the second dataframe
+for index, row in df2.iterrows():
+    target_cols = row['target']
+    values = df1.loc[df1['id'] == row['id'], target_cols].values.tolist()[0]
+    df2.at[index, 'target'] = values
 
-# Add column names for each of the 10 columns
-df.columns = [f'col{i}' for i in range(1, 11)]
+print(df2)
 
-# Add a new column for the 2nd dimension
-df['dim2'] = np.repeat(range(data.shape[1]), data.shape[0]*data.shape[2])
 
-# Add a new column for the 1st dimension
-df['dim1'] = np.tile(range(data.shape[0]), data.shape[1]*data.shape[2])
+import pandas as pd
 
-# Optional: set the index as a multi-index based on the first two dimensions
-df.set_index(['dim1', 'dim2'], inplace=True)
+# create the first dataframe
+df1 = pd.DataFrame({
+        'id': [1, 2, 3],
+        'col1': [10, 11, 10],
+        'col2': [11, 10, 1],
+        'col3': [12, 1, 2]
+    })
 
-print(df)
+# create the second dataframe
+df2 = pd.DataFrame({
+        'id': [1, 2, 3],
+        'target': [['col1', 'col2'], ['col2', 'col3'], ['col1']]
+    })
+
+# define a lambda function to extract the values
+extract_values = lambda row: df1.loc[df1['id'] == row['id'], row['target']].values.tolist()[0]
+
+# apply the lambda function to the second dataframe
+df2['target'] = df2.apply(extract_values, axis=1)
+
+print(df2)
